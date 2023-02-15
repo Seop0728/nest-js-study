@@ -13,17 +13,12 @@ export class BoardsService {
     private boardRepository: BoardRepository,
   ) {}
 
-  async createBoard(createBoardDto: CreateBoardDto): Promise<Board> {
-    const { title, description } = createBoardDto;
+  createBoard(createBoardDto: CreateBoardDto): Promise<Board> {
+    return this.boardRepository.createBoard(createBoardDto);
+  }
 
-    const board = this.boardRepository.create({
-      title,
-      description,
-      status: BoardStatus.PUBLIC,
-    });
-
-    await this.boardRepository.save(board);
-    return board;
+  async getAllBoards(): Promise<Board[]> {
+    return this.boardRepository.find();
   }
 
   async getBoardById(id: number): Promise<Board> {
@@ -34,24 +29,22 @@ export class BoardsService {
     }
     return found;
   }
-  // getBoardById(@Param('id') id: string): Board {
-  //   const found = this.boards.find((board) => board.id === id);
-  //   if (!found) {
-  //     throw new NotFoundException(
-  //       `NotFoundException에 메세지를 넣을수있다 id:${id}`,
-  //     );
-  //   }
-  //   return found;
-  // }
-  //
-  // deleteBoard(id: string): void {
-  //   const found = this.getBoardById(id);
-  //   this.boards = this.boards.filter((board) => board.id !== found.id);
-  // }
-  //
-  // updateBoardStatus(id: string, status: BoardStatus): Board {
-  //   const board = this.getBoardById(id);
-  //   board.status = status;
-  //   return board;
-  // }
+
+  async updateBoardStatus(id: number, status: BoardStatus): Promise<Board> {
+    const board = await this.getBoardById(id);
+
+    board.status = status;
+    await this.boardRepository.save(board);
+
+    return board;
+  }
+
+  async deleteBoard(id: number): Promise<void> {
+    const result = await this.boardRepository.delete(id);
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`해당 아이디를 찾을수 없어요. id:  ${id}`);
+    }
+    console.log('result', result);
+  }
 }
